@@ -19,125 +19,108 @@ namespace Practical_Exam.Controllers
         {
             _context = context;
         }
-
-        // GET /api/projects
         [HttpGet]
-        public IActionResult GetProjects()
+        public IActionResult Index()
         {
-            var projects = _context.Projects.ToList();
-            List<ProjectDTO> projectDTOs = new List<ProjectDTO>();
+            var projects = _context.Projects.ToList<Project>();
+            return Ok(projects);
+        }
+        [HttpGet]
+        [Route("detail")]
+        public IActionResult Details(int id)
+        {
+            var pr = _context.Projects
+        .Include(p => p.ProjectEmployees)
+        .ThenInclude(pe => pe.Employee)
+        .FirstOrDefaultAsync(p => p.ProjectId == id);
 
-            foreach (var project in projects)
+            if (pr == null)
             {
-                projectDTOs.Add(new ProjectDTO
-                {
-                    ProjectId = project.ProjectId,
-                    ProjectName = project.ProjectName,
-                    ProjectStartDate = project.ProjectStartDate,
-                    ProjectEndDate = project.ProjectEndDate
-                });
+                return NotFound();
             }
-
-            return Ok(projectDTOs);
+            return Ok(pr);
         }
 
-        // GET /api/projects/{id}
-        [HttpGet("{id}")]
-        public IActionResult GetProject(int id)
+        [HttpGet]
+        [Route("search")]
+        public IActionResult SearchByName(string projectName, bool inProgress)
         {
-            var project = _context.Projects.Find(id);
+            IQueryable<Project> query = _context.Projects;
 
-            if (project != null)
+            if (!string.IsNullOrEmpty(projectName))
             {
-                var projectDTO = new ProjectDTO
-                {
-                    ProjectId = project.ProjectId,
-                    ProjectName = project.ProjectName,
-                    ProjectStartDate = project.ProjectStartDate,
-                    ProjectEndDate = project.ProjectEndDate
-                };
-                return Ok(projectDTO);
+                var pr = query.Where(p => p.ProjectName.Contains(projectName)).FirstOrDefault();
+                return Ok(pr);
             }
 
-            return NotFound();
+            if (inProgress)
+            {
+                var pr = query.Where(p => p.ProjectEndDate == null || p.ProjectEndDate > DateTime.Now).ToList();
+                return Ok(pr);
+            }
+            else
+            {
+                var pr = query.Where(p => p.ProjectEndDate != null && p.ProjectEndDate <= DateTime.Now).ToList();
+                return Ok(pr);
+
+            }
+
+
+
         }
 
-        // POST /api/projects
+        [HttpGet]
+        [Route("SearchProgress")]
+        public IActionResult SearchProgress(string projectName)
+        {
+            var pr = _context.Projects.Where(p => p.ProjectName.Contains(projectName)).FirstOrDefault();
+            return Ok(new ProjectDTO
+            {
+                ProjectName = pr.ProjectName,
+                ProjectStartDate = pr.ProjectStartDate,
+                ProjectEndDate = pr.ProjectEndDate,
+            });
+        }
+
+
         [HttpPost]
-        public IActionResult CreateProject(ProjectDTO projectDTO)
+        public IActionResult Create(ProjectDTO projectData)
         {
-            if (ModelState.IsValid)
+            var pr = _context.Projects.Where(p => p.ProjectName.Contains(projectData.ProjectName)).FirstOrDefault();
+            if (pr != null)
+                return BadRequest("Project is exists");
+            var newpr = new Entities.Project
             {
-                var maxProjectId = _context.Projects.Max(e => e.ProjectId);
-
-                var project = new Project
-                {
-                    ProjectId = maxProjectId +1,
-                    ProjectName = projectDTO.ProjectName,
-                    ProjectStartDate = projectDTO.ProjectStartDate,
-                    ProjectEndDate = projectDTO.ProjectEndDate
-                };
-
-                _context.Projects.Add(project);
-                _context.SaveChanges();
-
-                return CreatedAtAction(nameof(GetProject), new { id = project.ProjectId }, new ProjectDTO
-                {
-                    ProjectId = project.ProjectId,
-                    ProjectName = project.ProjectName,
-                    ProjectStartDate = project.ProjectStartDate,
-                    ProjectEndDate = project.ProjectEndDate
-                });
-            }
-
-            return BadRequest(ModelState);
-        }
-
-        // PUT /api/projects/{id}
-        [HttpPut("{id}")]
-        public IActionResult UpdateProject(int id, ProjectDTO projectDTO)
-        {
-            if (id != projectDTO.ProjectId)
-            {
-                return BadRequest();
-            }
-
-            var project = _context.Projects.Find(id);
-
-            if (project == null)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                project.ProjectName = projectDTO.ProjectName;
-                project.ProjectStartDate = projectDTO.ProjectStartDate;
-                project.ProjectEndDate = projectDTO.ProjectEndDate;
-
-                _context.SaveChanges();
-
-                return NoContent();
-            }
-
-            return BadRequest(ModelState);
-        }
-
-        // DELETE /api/projects/{id}
-        [HttpDelete("{id}")]
-        public IActionResult DeleteProject(int id)
-        {
-            var project = _context.Projects.Find(id);
-
-            if (project == null)
-            {
-                return NotFound();
-            }
-
-            _context.Projects.Remove(project);
+                ProjectName = projectData.ProjectName,
+                ProjectStartDate = projectData.ProjectStartDate,
+                ProjectEndDate = projectData.ProjectEndDate,
+            };
+            _context.Projects.Add(newpr);
             _context.SaveChanges();
+            return Ok(projectData);
+        }
 
+        [HttpPut]
+        public IActionResult Update(int id, ProjectDTO projectData)
+        {
+            var pr = _context.Projects.Find(id);
+            if (pr == null) return NotFound("Not Found Project");
+            pr.ProjectStartDate = projectData.ProjectStartDate;
+            pr.ProjectEndDate = projectData.ProjectEndDate;
+            pr.ProjectName = pr.ProjectName;
+            _context.SaveChanges();
             return NoContent();
         }
+
+        [HttpDelete]
+        public IActionResult Delette(int id)
+        {
+            var pr = _context.Projects.Find(id);
+            if (pr == null) return NotFound("Not Found Project");
+            _context.Projects.Remove(pr);
+            _context.SaveChanges();
+            return NoContent();
+        }
+
     }
 }

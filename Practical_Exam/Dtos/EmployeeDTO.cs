@@ -1,12 +1,19 @@
-﻿namespace Practical_Exam.Dtos
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Practical_Exam.Dtos
 {
     public class EmployeeDTO
     {
-        public int EmployeeId { get; set; }
+        [Required]
+        [StringLength(150, MinimumLength = 2)]
         public string? EmployeeName { get; set; }
-        public DateTime? EmployeeDOB { get; set; }
-        public string? EmployeeDepartment { get; set; }
-        public List<ProjectEmployeeDTO>? projectEmployee { get; set; }
+        [Required]
+        [DataType(DataType.Date)]
+        [MinimumAge(16)]
+        public DateTime? EmployeeDob { get; set; }
 
+        [Required]
+        [EmailAddress]
+        public string? EmployeeDepartment { get; set; }
     }
 }
