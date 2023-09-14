@@ -33,7 +33,7 @@ namespace Practical_Exam.Controllers
                 {
                     EmployeeId = employee.EmployeeId,
                     EmployeeName = employee.EmployeeName,
-                    EmployeeDob = employee.EmployeeDob,
+                    EmployeeDOB = employee.EmployeeDob,
                     EmployeeDepartment = employee.EmployeeDepartment
                 });
             }
@@ -53,7 +53,7 @@ namespace Practical_Exam.Controllers
                 {
                     EmployeeId = employee.EmployeeId,
                     EmployeeName = employee.EmployeeName,
-                    EmployeeDob = employee.EmployeeDob,
+                    EmployeeDOB = employee.EmployeeDob,
                     EmployeeDepartment = employee.EmployeeDepartment
                 };
                 return Ok(employeeDTO);
@@ -68,10 +68,13 @@ namespace Practical_Exam.Controllers
         {
             if (ModelState.IsValid)
             {
+                var maxEmployeeId = _context.Employees.Max(e => e.EmployeeId);
+
                 var employee = new Employee
                 {
+                    EmployeeId = maxEmployeeId + 1,
                     EmployeeName = employeeDTO.EmployeeName,
-                    EmployeeDob = employeeDTO.EmployeeDob,
+                    EmployeeDob = employeeDTO.EmployeeDOB,
                     EmployeeDepartment = employeeDTO.EmployeeDepartment
                 };
 
@@ -82,7 +85,7 @@ namespace Practical_Exam.Controllers
                 {
                     EmployeeId = employee.EmployeeId,
                     EmployeeName = employee.EmployeeName,
-                    EmployeeDob = employee.EmployeeDob,
+                    EmployeeDOB = employee.EmployeeDob,
                     EmployeeDepartment = employee.EmployeeDepartment
                 });
             }
@@ -109,7 +112,7 @@ namespace Practical_Exam.Controllers
             if (ModelState.IsValid)
             {
                 employee.EmployeeName = employeeDTO.EmployeeName;
-                employee.EmployeeDob = employeeDTO.EmployeeDob;
+                employee.EmployeeDob = employeeDTO.EmployeeDOB;
                 employee.EmployeeDepartment = employeeDTO.EmployeeDepartment;
 
                 _context.SaveChanges();

@@ -68,8 +68,11 @@ namespace Practical_Exam.Controllers
         {
             if (ModelState.IsValid)
             {
+                var maxProjectId = _context.Projects.Max(e => e.ProjectId);
+
                 var project = new Project
                 {
+                    ProjectId = maxProjectId +1,
                     ProjectName = projectDTO.ProjectName,
                     ProjectStartDate = projectDTO.ProjectStartDate,
                     ProjectEndDate = projectDTO.ProjectEndDate
